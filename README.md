@@ -1,7 +1,6 @@
-# make_model
-
-1. make_model.py ... 判定モデルを作るスクリプト
-    input: 
+# make_model.py
+... 判定モデルを作るスクリプト
+    ## input 
         オプション
         ・-c, --classifier
             ... 分類手法(CNN, GPC, Logistic, SVC) (default値:CNN)
@@ -25,7 +24,7 @@
         ・好みである画像をまとめたフォルダのpath
         ・好みでない画像をまとめたフォルダのpath
 
-    output:
+    ## output
         CNNの場合
         ・CNN_model.json, CNN_weights.hdf5
             ... モデルとその重み
@@ -49,26 +48,26 @@
 ・CNNモデルを作る場合,optimizerにAdamを指定している(255行目)が, val_accやval_lossが変化しないことがあるので
  その時は代わりにSGDを使用(代わりに256行目のコメントアウトを外す)して欲しい.
 
-
-2. use_model.py ... make_model.pyで生成した判定モデルを使うスクリプト
-    input: 
-        オプション
-        ・-c, --classifier
+# use_model.py 
+... make_model.pyで生成した判定モデルを使うスクリプト
+    ## input
+        <dt>オプション</dt>
+        * -c, --classifier
             ... 生成したモデルの分類手法(CNN, GPC, Logistic, SVC) (default値:CNN)
 
-        ・-t, --threshold
+        * -t, --threshold
             ... 好みであるかの基準となる確率値(0.0~1.0) (default値: 0.5) ※CNNでしか機能しない
 
-        ・-s, --savedir(指定必須)
+        * -s, --savedir(指定必須)
             ... モデル, モデルの性能情報に関するファイル保存されているディレクトリ
 
-        ・-r, --rm
+        * -r, --rm
             ... 好みでないと判定された画像を,破棄するか,別フォルダ'notlike_imgs'に保存するかを指定(default値: False(破棄しない))
 
-        スクリプト起動後に入力を求められるもの
-        ・判定したい画像をまとめたフォルダのpath
+        <dt>スクリプト起動後に入力を求められるもの</dt>
+        * 判定したい画像をまとめたフォルダのpath
 
-    output:
+    ## output
         CNNの場合
         ・like_imgs, notlike_imgs
             ... モデルによって分類されてまとめられた画像フォルダ
