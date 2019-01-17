@@ -1,5 +1,5 @@
-# make_model.py
-... 判定モデルを作るスクリプト
+# make_model
+## make_model.py : 判定モデルを作るスクリプト
     ## input 
         オプション
         ・-c, --classifier
@@ -48,8 +48,7 @@
 ・CNNモデルを作る場合,optimizerにAdamを指定している(255行目)が, val_accやval_lossが変化しないことがあるので
  その時は代わりにSGDを使用(代わりに256行目のコメントアウトを外す)して欲しい.
 
-# use_model.py 
-... make_model.pyで生成した判定モデルを使うスクリプト
+## use_model.py : make_model.pyで生成した判定モデルを使うスクリプト
     ## input
         <dt>オプション</dt>
         * -c, --classifier
