@@ -1,6 +1,6 @@
 # make_model
 ## make_model.py : 判定モデルを作るスクリプト
-    input 
+    ○input 
         オプション
         * -c, --classifier
             ... 分類手法(CNN, GPC, Logistic, SVC) (default値:CNN)
@@ -24,7 +24,7 @@
         * 好みである画像をまとめたフォルダのpath
         * 好みでない画像をまとめたフォルダのpath
 
-    output
+    ○output
         CNNの場合
         * CNN_model.json, CNN_weights.hdf5
             ... モデルとその重み
@@ -48,8 +48,8 @@
 * CNNモデルを作る場合,optimizerにAdamを指定している(255行目)が, val_accやval_lossが変化しないことがあるのでその時は代わりにSGDを使用(代わりに256行目のコメントアウトを外す)して欲しい.
 
 ## use_model.py : make_model.pyで生成した判定モデルを使うスクリプト
-    input
-        <dt>オプション</dt>
+    ○input
+        オプション
         * -c, --classifier
             ... 生成したモデルの分類手法(CNN, GPC, Logistic, SVC) (default値:CNN)
 
@@ -62,10 +62,10 @@
         * -r, --rm
             ... 好みでないと判定された画像を,破棄するか,別フォルダ'notlike_imgs'に保存するかを指定(default値: False(破棄しない))
 
-        <dt>スクリプト起動後に入力を求められるもの</dt>
+        スクリプト起動後に入力を求められるもの
         * 判定したい画像をまとめたフォルダのpath
 
-    output
+    ◯output
         CNNの場合
         * like_imgs, notlike_imgs
             ... モデルによって分類されてまとめられた画像フォルダ
