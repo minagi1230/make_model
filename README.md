@@ -26,19 +26,19 @@
 
     output
         CNNの場合
-        * CNN_model.json, CNN_weights.hdf5
+        * `CNN_model.json, CNN_weights.hdf5`
             ... モデルとその重み
-        * data.pickle
+        * `data.pickle`
             ... 学習に用いた加工したデータ(エポック数等を変えてまたモデルを作りたい時に手間を省くもの)
-        * epoch_AccLoss.png
+        * `epoch_AccLoss.png`
             ... 学習過程のグラフ
-        * result.txt
+        * `result.txt`
             ... 生成されたモデルのrecall, precision, accuracy, f_scoreをまとめたもの
 
         CNN以外の場合
-        * (分類機)_model.pickle
+        * `(分類機)_model.pickle`
             ...モデル
-        * data.pickle
+        * `data.pickle`
             ... 学習に用いた加工したデータ(ハイパーパラメータをチューニングし直したりする際に手間を省くもの)
 
 [補足]
