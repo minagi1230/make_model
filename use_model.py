@@ -1,12 +1,9 @@
 # codeing: utf-8
 
-import argparse, glob, os, shutil
+import argparse, glob, sys, os, shutil
 from tqdm import tqdm
 import numpy as np
 from PIL import Image
-
-# CNN以外の分類方法で予測する場合
-from sklearn.externals import joblib
 
 # CNNによって分類予測する場合
 from keras.models import model_from_json
@@ -23,7 +20,6 @@ def make_args():
             ''',
             formatter_class=argparse.ArgumentDefaultsHelpFormatter, #default値を表示
             )
-    parser.add_argument("-c", "--classifier", type=str, default='CNN', choices=['CNN', 'GPC', 'Logistic', 'SVM'], help="用いた分類器の指定")
     parser.add_argument("-t", "--threshold", type=float, default=0.5, help="判定基準となる確率値")
     parser.add_argument("-s", "--savedir", type=str, help="モデルに関するデータを保存したフォルダのpathを指定")
     parser.add_argument("-r", "--rm", type=bool, default=False, choices=[True, False], help='好みでないと判定された画像を別フォルダに保存するか削除するかを指定')
@@ -33,16 +29,19 @@ def make_args():
 
 
 # 画像データの読み込み
-def getXTest(folderpath, classifier):
+def getXTest(folderpath):
+    # ファイルの存在を確認
+    if not os.path.exists(folderpath):
+        print('The folder is NOT found.....')
+        sys.exit()
+
     print('Images loading.....')
     img_size = 100
     x_img = []
     imgpaths = glob.glob(folderpath+'/*')
     for imgpath in tqdm(imgpaths):
-        img = Image.open(imgpath).convert("RGB")
-        img = img.resize((img_size, img_size))
+        img = Image.open(imgpath).convert("RGB").resize((img_size, img_size))
         rgb_data = np.asarray(img)
-        if classifier != 'CNN': rgb_data = rgb_data.reshape(-1)
         x_img.append(rgb_data)
 
     # 画素値の正規化
@@ -52,77 +51,81 @@ def getXTest(folderpath, classifier):
 
 
 # 既存のモデルの読み込み
-def loadModel(classifier, save_dir):
+def loadModel(save_dir):
+    # ファイルの存在を確認
+    if not os.path.exists(save_dir+'/'):
+        print("The 'save_dir' is NOT found.....")
+        sys.exit()
+
     print('Model loading.....', end='')
-    if classifier == 'CNN':                                                               # 任意のモデル
-        model_filename = save_dir+'/model_CNN/CNN_model.json'              # モデル
-        weights_filename = save_dir+'/model_CNN/CNN_weights.hdf5'          # 重み
-        json_string = open(model_filename).read()
-        model = model_from_json(json_string)
-        model.load_weights(weights_filename)
-    else:
-        model = joblib.load(save_dir+'/model_{}/{}_model.pickle'.format(classifier, classifier))
+    model_filename = save_dir+'/model/cnn_model.json'              # モデル
+    weights_filename = save_dir+'/model/cnn_weights.hdf5'          # 重み
+    json_string = open(model_filename).read()
+    model = model_from_json(json_string)
+    model.load_weights(weights_filename)
     print('Finish!')
 
     return model
 
+
+# 画像移動(好みの画像と好みでない画像をそれぞれフォルダに分ける)
+def moveImages(folderpath, save_dir, y_predict, threshold):
+    like_imgs_path = save_dir+'/image/like_imgs'
+    notlike_imgs_path = save_dir+'/image/notlike_imgs'
+    if not os.path.exists(save_dir+'/image/'): os.mkdir(save_dir+'/image/')
+    if not os.path.exists(like_imgs_path): os.mkdir(like_imgs_path)
+    if not os.path.exists(notlike_imgs_path) and not rm: os.mkdir(notlike_imgs_path)
+    probability_list = []
+    print('Moving images.....')
+    for i, imgpath in tqdm(enumerate(glob.glob(folderpath+'/*'))):
+        # 各画像の確率をlistにまとめる
+        data = []
+        data.append(os.path.basename(imgpath))
+        prob = y_predict[i][1]
+        data.append(prob)
+        probability_list.append(data)
+
+        # 確率に応じて画像を移動
+        if prob >= threshold: shutil.move(imgpath, like_imgs_path)
+        else: shutil.move(imgpath, notlike_imgs_path)
+    
+    return probability_list
+
     
 def main():
     args = make_args()
+
+    # 閾値の確認
+    threshold = args.threshold
+    if threshold <= 0.0 or 1.0 <= threshold:
+        print('Threshold Error!')
+        sys.exit()
+
+    # テストしたい画像フォルダを入力, 取得
+    print('Please input the folder of images:')
+    folderpath = input()
+    x_test = getXTest(folderpath)
+
+    # モデルをload
     save_dir = args.savedir
-    classifier = args.classifier
-    if 0.0 <= args.threshold <= 1.0:
-        # テストしたい画像フォルダを入力, 取得
-        print('Please input the folder of images:')
-        folderpath = input()
-        if not os.path.exists(folderpath): print('The folder is NOT found.....')
-        else:
-            x_test = getXTest(folderpath, classifier)
+    model = loadModel(save_dir)
 
-            if not os.path.exists(save_dir+'/'): print("The 'saving_directory' is NOT found.....")
-            else:
-                # モデルをload
-                model = loadModel(classifier, save_dir)
+    # 予測
+    y_predict = model.predict(x_test)
 
-                # 予測
-                y_predict = model.predict(x_test)
+    # 予測に基づいて画像を移動させる
+    probability_list = moveImages(folderpath, save_dir, y_predict, threshold)
+    if args.rm: os.remove(save_dir+'/image/notlike_imgs')
 
+    # 各画像の確率をtxtファイルに保存
+    with open(save_dir+'/image/probability.txt', 'w') as f:
+        f.write('\n'.join(map(str, probability_list)))
 
-                # 画像移動(好みの画像と好みでない画像をそれぞれフォルダに分ける)
-                if not os.path.exists(save_dir+'/like_imgs'): os.mkdir(save_dir+'/like_imgs')
-                if not os.path.exists(save_dir+'/notlike_imgs'): os.mkdir(save_dir+'/notlike_imgs')
-                probability_list = []
-                print('Moving images.....')
-                for i, imgpath in tqdm(enumerate(glob.glob(folderpath+'/*'))):
-                    # 各画像の確率をlistにまとめる
-                    data = []
-                    data.append(os.path.basename(imgpath))
-                    if classifier == 'CNN':
-                        prob = y_predict[i][1]
-                        data.append(prob)
-                        probability_list.append(data)
-                    else: prob = y_predict[i]
+    # 各画像の確率を標準出力
+    for data_prob in probability_list:
+        print(data_prob[0]+': '+str(data_prob[1]))
 
-                    # 確率に応じて画像を移動
-                    if prob >= args.threshold:
-                        shutil.move(imgpath, save_dir+'/like_imgs')
-                    else:
-                        # 好みでない画像を破棄するか別フォルダにまとめるか
-                        if args.rm: os.remove(imgpath)
-                        else: shutil.move(imgpath, save_dir+'/notlike_imgs')
-                
-                if classifier == 'CNN':
-                    # 各画像の確率をtxtファイルに保存
-                    with open(save_dir+'/probability.txt', 'w') as f:
-                        f.write('\n'.join(map(str, probability_list)))
-                
-                    # 各画像の確率を標準出力
-                    for data_prob in probability_list:
-                        print(data_prob[0]+': '+str(data_prob[1]))
-
-                print('All done!')
-    
-    else: print('Threshold Error!')
+    print('All done!')
         
 
 if __name__ == '__main__':
