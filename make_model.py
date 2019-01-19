@@ -32,6 +32,8 @@ def make_args():
     parser.add_argument("-t", "--tuning", type=bool, default=False, choices=[True, False], help="ハイパーパラメータをチューニングするかを指定")
     parser.add_argument("-n", "--trials", type=int, default=5, choices=range(1,51), help="チューニングする際の探索回数")
     parser.add_argument("-d", "--datamake", type=bool, default=False, choices=[True, False], help="データを作るか,pickleファイルから読み込むかを指定")
+    parser.add_argument("-i1", "-imagefl1", type=str, help="好みの画像が保存されているpathを指定")
+    parser.add_argument("-i2", "-imagefl2", type=str, help="好みでない画像が保存されているpathを指定")
     parser.add_argument("-s", "--savedir", type=str, help="モデルに関するデータを保存するpathを指定")
     args = parser.parse_args()
 
@@ -47,7 +49,7 @@ def makeDatasets(like_imgs_flpath, notlike_imgs_flpath):
     if not os.path.exists(notlike_imgs_flpath):
         print('The PATH(notlike_imgs) is NOT found....')
         sys.exit()
-        
+
     print('Dataset making.....')
     img_size = 100
     x_img, y_label = [], []
@@ -314,10 +316,8 @@ def main():
     # 訓練データ,テストデータを作るか既存のものを読み込むか
     if args.datamake:
         # 各クラスの画像フォルダのpath
-        print("The PATH of the folder in which the images you like are saved:", end="")
-        like_imgs_flpath = input()
-        print("The PATH of the folder which the images you DON'T like are saved:", end="")
-        notlike_imgs_flpath = input()
+        like_imgs_flpath = args.i1
+        notlike_imgs_flpath = args.i2
 
         # 作った訓練データ,テストデータをpickleに保存
         x_train, y_train, x_test, y_test = makeDatasets(like_imgs_flpath, notlike_imgs_flpath)
