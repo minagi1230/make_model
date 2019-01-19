@@ -21,6 +21,7 @@ def make_args():
             formatter_class=argparse.ArgumentDefaultsHelpFormatter, #default値を表示
             )
     parser.add_argument("-t", "--threshold", type=float, default=0.5, help="判定基準となる確率値")
+    parser.add_argument("-i", "--imagefl", type=str, help="判定したい画像フォルダのpathを指定")
     parser.add_argument("-s", "--savedir", type=str, help="モデルに関するデータを保存したフォルダのpathを指定")
     parser.add_argument("-r", "--rm", type=bool, default=False, choices=[True, False], help='好みでないと判定された画像を別フォルダに保存するか削除するかを指定')
     args = parser.parse_args()
@@ -102,8 +103,7 @@ def main():
         sys.exit()
 
     # テストしたい画像フォルダを入力, 取得
-    print('Please input the folder of images:')
-    folderpath = input()
+    folderpath = args.i
     x_test = getXTest(folderpath)
 
     # モデルをload
